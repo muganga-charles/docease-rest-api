@@ -8,6 +8,7 @@ app.use(express.urlencoded({ extended: true }))
 // #############################################################################
 // This configures static hosting for files in /public that have the extensions
 // listed in the array.
+
 // var options = {
 //   dotfiles: 'ignore',
 //   etag: false,
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }))
 //   maxAge: '1m',
 //   redirect: false
 // }
+
 // app.use(express.static('public', options))
 // #############################################################################
 
