@@ -72,6 +72,7 @@
 // app.listen(port, () => {
 //   console.log(`index.js listening on ${port}`)
 // })
+
 const express = require('express')
 const app = express()
 const CyclicDB = require('@cyclic.sh/dynamodb')
@@ -84,6 +85,9 @@ app.use(express.urlencoded({ extended: true }))
 const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`index.js listening on ${port}`)
+})
+app.get('/', async (req, res) => {
+  res.json({ msg: 'hello world' }).end()
 })
 
 app.get('/col', async (req, res) => {
