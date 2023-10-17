@@ -20,3 +20,11 @@ app.post('/api', async (req, res) => {
   const result = await db.putItem({ name, email })
   res.json(result).end()
 })
+
+app.get('/:col', async (req, res) => {
+  const col = req.params.col
+  console.log(`list collection: ${col} with params: ${JSON.stringify(req.params)}`)
+  const items = await db.collection(col).list()
+  console.log(JSON.stringify(items, null, 2))
+  res.json(items).end()
+})
