@@ -55,3 +55,10 @@ app.post('collection/:colName', async (req, res) => {
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
+
+app.delete('collection/:colName', async (req, res) => {
+  const { colName } = req.params;
+  const newCollection = await db.collection.delete(colName);
+  console.log(JSON.stringify(newCollection, null, 2))
+  res.json(newCollection).end()
+})
