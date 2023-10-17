@@ -51,7 +51,7 @@ app.get('/:col', async (req, res) => {
 
 app.post('collection/:colName', async (req, res) => {
   const { colName } = req.params;
-  const newCollection = db.collection(colName);
+  const newCollection = await db.collection(colName);
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
