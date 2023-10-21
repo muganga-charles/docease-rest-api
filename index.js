@@ -84,14 +84,14 @@ app.post('/login', async (req, res) => {
   try {
     // Fetch the student data from the database using the provided access number
     const student = await db.collection('student').get(accessnumber);
-    console.log(student)
+
     // If the student doesn't exist or passwords don't match, return an error
     if (!student || student.props.password !== password) {
       return res.status(401).json({ success: false, message: 'Invalid access number or password.' });
     }
 
     // If everything is okay, return a success message (and possibly a token or any other data)
-    res.json({ success: true, message: 'Login successful.' });
+    res.json({ success: true, message: 'Login successful.', data: { firstname: student.props.firstname } });
 
   } catch (error) {
     console.error(error);
