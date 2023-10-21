@@ -6,10 +6,15 @@ const app = express()
 const CyclicDB = require('@cyclic.sh/dynamodb')
 const db = CyclicDB('dull-lime-cod-robeCyclicDB')
 
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200
+}
+
 app.use(express.json())
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }))
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 // app.use(express.static('public', options))
 
 const port = process.env.PORT || 3000
