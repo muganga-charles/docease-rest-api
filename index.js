@@ -9,6 +9,7 @@ const db = CyclicDB('dull-lime-cod-robeCyclicDB')
 app.use(express.json())
 app.use(cors());
 app.use(express.urlencoded({ extended: true }))
+app.use(bodyParser.json());
 // app.use(express.static('public', options))
 
 const port = process.env.PORT || 3000
@@ -66,3 +67,28 @@ app.delete('collection/:colName', async (req, res) => {
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
+
+app.post('/login', async (req, res) => {
+  const { accessnumber, password } = req.body;
+
+  if (!accessnumber || !password) {
+    return res.status(400).json({ success: false, message: 'Both access number and password are required.' });
+  }
+
+  try {
+    // Fetch the student data from the database using the provided access number
+    const student = await db.collection('student').get(accessnumber);
+
+    // If the student doesn't exist or passwords don't match, return an error
+    if (!student || student.props.password !== password) {
+      return res.status(401).json({ success: false, message: 'Invalid access number or password.' });
+    }
+
+    // If everything is okay, return a success message (and possibly a token or any other data)
+    res.json({ success: true, message: 'Login successful.' });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
