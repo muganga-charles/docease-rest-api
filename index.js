@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express()
 
@@ -14,7 +15,7 @@ const corsOptions = {
 app.use(express.json())
 app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }))
-// app.use(bodyParser.json());
+app.use(bodyParser.json());
 // app.use(express.static('public', options))
 
 const port = process.env.PORT || 3000
@@ -83,7 +84,7 @@ app.post('/login', async (req, res) => {
   try {
     // Fetch the student data from the database using the provided access number
     const student = await db.collection('student').get(accessnumber);
-
+    console.log(student)
     // If the student doesn't exist or passwords don't match, return an error
     if (!student || student.props.password !== password) {
       return res.status(401).json({ success: false, message: 'Invalid access number or password.' });
