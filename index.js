@@ -22,7 +22,7 @@ const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`index.js listening on ${port}`)
 })
-app.get('/', async (req, res) => {
+app.get('/', async (req, res) => { // testing code on server
   res.json({ msg: 'hello world' }).end()
 })
 
@@ -32,7 +32,7 @@ app.post('/api', async (req, res) => {
   res.json(result).end()
 })
 
-app.post('/:col/:key', async (req, res) => {
+app.post('/:col/:key', async (req, res) => { // deleting a key from a collection
   console.log(req.body)
 
   const col = req.params.col
@@ -43,7 +43,7 @@ app.post('/:col/:key', async (req, res) => {
   res.json(item).end()
 })
 
-app.get('/:col/:key', async (req, res) => {
+app.get('/:col/:key', async (req, res) => { // getting a key from a collection
   const col = req.params.col
   const key = req.params.key
   console.log(`from collection: ${col} get key: ${key} with params ${JSON.stringify(req.params)}`)
@@ -52,7 +52,7 @@ app.get('/:col/:key', async (req, res) => {
   res.json(item).end()
 })
 
-app.get('/:col', async (req, res) => {
+app.get('/:col', async (req, res) => { // listing a collection
   const col = req.params.col
   console.log(`list collection: ${col} with params: ${JSON.stringify(req.params)}`)
   const items = await db.collection(col).list()
@@ -60,21 +60,21 @@ app.get('/:col', async (req, res) => {
   res.json(items).end()
 })
 
-app.post('collection/:colName', async (req, res) => {
+app.post('collection/:colName', async (req, res) => { // creating a collection
   const { colName } = req.params;
   const newCollection = await db.collection(colName);
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
 
-app.delete('collection/:colName', async (req, res) => {
+app.delete('collection/:colName', async (req, res) => { // deleting a collection
   const { colName } = req.params;
   const newCollection = await db.deleteCollection(colName);
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => { // trial on student login
   const { accessnumber, password } = req.body;
 
   if (!accessnumber || !password) {
