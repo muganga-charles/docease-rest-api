@@ -43,6 +43,7 @@ app.post('/api', async (req, res) => {
 //   res.json(item).end()
 // })
 
+
 app.get('/:col/:key', async (req, res) => { // getting a key from a collection
   const col = req.params.col
   const key = req.params.key
@@ -73,6 +74,30 @@ app.delete('collection/:colName', async (req, res) => { // deleting a collection
   console.log(JSON.stringify(newCollection, null, 2))
   res.json(newCollection).end()
 })
+
+app.post('/clients/new', async (req, res) => { // verifying if email already exists in the database
+  const { email } = req.body;
+
+  try {
+      // Check if the user exists
+      const client = await db.collection('doceaseclients').get(email);
+
+      // If the user exists, return a message
+      if (client) {
+          res.json({ success: false, message: 'User already exists.' });
+          return;
+      }
+
+      // If the user doesn't exist, add them to the database
+      const result = await db.collection('doceaseclients').set(email, req.body);
+      console.log(JSON.stringify(result, null, 2));
+      res.json({ success: true, message: 'User added successfully.', data: { added: true } });
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
 
 app.post('/login', async (req, res) => { // trial on student login
   const { accessnumber, password } = req.body;
