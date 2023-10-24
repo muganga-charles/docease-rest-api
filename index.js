@@ -114,30 +114,19 @@ app.post('/users/login', async (req, res) => {
     // Fetching the client with the provided email
     const client = await db.collection('doceaseclients').get(email);
     if (client) {
-      const passwordMatch = await bcrypt.compare(password, client.password);
-      if (!passwordMatch) {
-        return res.status(401).json({ success: false, message: 'Invalid password.' });
-      }
-      else {
-        return res.status(200).json({ success: true, message: 'Login successful.' });
-      }
+      // const passwordMatch = await bcrypt.compare(password, client.password);
+      // if (!passwordMatch) {
+      //   return res.status(401).json({ success: false, message: 'Invalid password.' });
+      // }
+      // else {
+      //   return res.status(200).json({ success: true, message: 'Login successful.' });
+      // }
       // return res.status(401).json({ success: false, message: 'valid email' });
+      console.log(JSON.stringify(client, null, 2));
     }
-
-    if (!client) {
+    else{
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
-
-    // Checking if the provided password matches the stored hashed password
-    // const passwordMatch = await bcrypt.compare(password, client.password);
-
-    // if (!passwordMatch) {
-    //   return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-    // }
-
-    // If both checks are valid, login is successful
-
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
