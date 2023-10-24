@@ -98,3 +98,16 @@ app.post('/login', async (req, res) => { // trial on student login
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 });
+
+// verifying if email already exists in the database
+app.post('/users/verify', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const client = await db.collection('doceaseclients').get(email);
+    res.json({ success: true, message: 'User verified successfully.', data: { exists: !!client } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
