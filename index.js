@@ -81,55 +81,65 @@ app.post('/clients/new', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-      // Check if the user exists
-      const client = await db.collection('doceaseclients').get(email);
+    // Check if the user exists
+    const client = await db.collection('doceaseclients').get(email);
 
-      // If the user exists, return a message
-      if (client) {
-          res.json({ success: false, message: 'User already exists.' });
-          return;
-      }
+    // If the user exists, return a message
+    if (client) {
+      res.json({ success: false, message: 'User already exists.' });
+      return;
+    }
 
-      // Hash the password before storing
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      // Replace the plain password with the hashed version
-      req.body.password = hashedPassword;
+    // Replace the plain password with the hashed version
+    req.body.password = hashedPassword;
 
-      // Store the user in the database
-      const result = await db.collection('doceaseclients').set(email, req.body);
-      console.log(JSON.stringify(result, null, 2));
-      res.json({ success: true, message: 'User added successfully.', data: { added: true } });
+    // Store the user in the database
+    const result = await db.collection('doceaseclients').set(email, req.body);
+    console.log(JSON.stringify(result, null, 2));
+    res.json({ success: true, message: 'User added successfully.', data: { added: true } });
 
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Internal server error.' });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 });
 
 app.post('/users/login', async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        // Fetching the client with the provided email
-        const client = await db.collection('doceaseclients').get(email);
-
-        if (!client) {
-            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-        }
-
-        // Checking if the provided password matches the stored hashed password
-        const passwordMatch = await bcrypt.compare(password, client.password);
-
-        if (!passwordMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-        }
-
-        // If both checks are valid, login is successful
-        res.json({ success: true, message: 'Login successful.' });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error.' });
+  try {
+    // Fetching the client with the provided email
+    const client = await db.collection('doceaseclients').get(email);
+    if (client) {
+      const passwordMatch = await bcrypt.compare(password, client.password);
+      if (!passwordMatch) {
+        return res.status(401).json({ success: false, message: 'Invalid password.' });
+      }
+      else {
+        return res.status(200).json({ success: true, message: 'Login successful.' });
+      }
+      // return res.status(401).json({ success: false, message: 'valid email' });
     }
+
+    if (!client) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Checking if the provided password matches the stored hashed password
+    // const passwordMatch = await bcrypt.compare(password, client.password);
+
+    // if (!passwordMatch) {
+    //   return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    // }
+
+    // If both checks are valid, login is successful
+
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
 });
