@@ -32,16 +32,16 @@ app.post('/api', async (req, res) => {
   res.json(result).end()
 })
 
-app.post('/:col/:key', async (req, res) => { // deleting a key from a collection
-  console.log(req.body)
+// app.post('/:col/:key', async (req, res) => { // deleting a key from a collection
+//   console.log(req.body)
 
-  const col = req.params.col
-  const key = req.params.key
-  console.log(`from collection: ${col} delete key: ${key} with params ${JSON.stringify(req.params)}`)
-  const item = await db.collection(col).set(key, req.body)
-  console.log(JSON.stringify(item, null, 2))
-  res.json(item).end()
-})
+//   const col = req.params.col
+//   const key = req.params.key
+//   console.log(`from collection: ${col} delete key: ${key} with params ${JSON.stringify(req.params)}`)
+//   const item = await db.collection(col).set(key, req.body)
+//   console.log(JSON.stringify(item, null, 2))
+//   res.json(item).end()
+// })
 
 app.get('/:col/:key', async (req, res) => { // getting a key from a collection
   const col = req.params.col
