@@ -1,5 +1,7 @@
 const express = require('express')
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const bodyParser = require('body-parser');
 
 const app = express()
@@ -75,8 +77,8 @@ app.delete('collection/:colName', async (req, res) => { // deleting a collection
   res.json(newCollection).end()
 })
 
-app.post('/clients/new', async (req, res) => { // verifying if email already exists in the database
-  const { email } = req.body;
+app.post('/clients/new', async (req, res) => {
+  const { email, password } = req.body;
 
   try {
       // Check if the user exists
@@ -88,7 +90,13 @@ app.post('/clients/new', async (req, res) => { // verifying if email already exi
           return;
       }
 
-      // If the user doesn't exist, add them to the database
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Replace the plain password with the hashed version
+      req.body.password = hashedPassword;
+
+      // Store the user in the database
       const result = await db.collection('doceaseclients').set(email, req.body);
       console.log(JSON.stringify(result, null, 2));
       res.json({ success: true, message: 'User added successfully.', data: { added: true } });
@@ -99,40 +107,29 @@ app.post('/clients/new', async (req, res) => { // verifying if email already exi
   }
 });
 
-app.post('/login', async (req, res) => { // trial on student login
-  const { accessnumber, password } = req.body;
+app.post('/users/login', async (req, res) => {
+    const { email, password } = req.body;
 
-  if (!accessnumber || !password) {
-    return res.status(400).json({ success: false, message: 'Both access number and password are required.' });
-  }
+    try {
+        // Fetching the client with the provided email
+        const client = await db.collection('doceaseclients').get(email);
 
-  try {
-    // Fetch the student data from the database using the provided access number
-    const student = await db.collection('student').get(accessnumber);
+        if (!client) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        }
 
-    // If the student doesn't exist or passwords don't match, return an error
-    if (!student || student.props.password !== password) {
-      return res.status(401).json({ success: false, message: 'Invalid access number or password.' });
+        // Checking if the provided password matches the stored hashed password
+        const passwordMatch = await bcrypt.compare(password, client.password);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        }
+
+        // If both checks are valid, login is successful
+        res.json({ success: true, message: 'Login successful.' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
-
-    // If everything is okay, return a success message (and possibly a token or any other data)
-    res.json({ success: true, message: 'Login successful.', data: { firstname: student.props.firstname } });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
-  }
-});
-
-// verifying if email already exists in the database
-app.post('/users/verify', async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    const client = await db.collection('doceaseclients').get(email);
-    res.json({ success: true, message: 'User verified successfully.', data: { exists: !!client } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
-  }
 });
