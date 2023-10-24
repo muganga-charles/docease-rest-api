@@ -123,7 +123,7 @@ app.post('/users/login', async (req, res) => {
         return res.status(200).json({ success: true, message: 'Login successful.',data: { client } });
       }
   }
-  else if(!client){
+  else{
     return res.status(401).json({ success: false, message: `Email adress not found, if you don't have an account please sign up.` });
   }
 } catch (error) {
