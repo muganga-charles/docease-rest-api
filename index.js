@@ -122,7 +122,7 @@ app.post('/users/login', async (req, res) => {
       //   return res.status(200).json({ success: true, message: 'Login successful.' });
       // }
       // return res.status(401).json({ success: false, message: 'valid email' });
-      console.log(JSON.stringify(client, null, 2));
+      return res.status(200).json({ success: true, message: 'Login successful.',data: { client } });
     }
     else{
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
