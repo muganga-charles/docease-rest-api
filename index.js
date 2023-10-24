@@ -121,7 +121,7 @@ app.post('/users/login', async (req, res) => {
       // else{
       // }
       console.log('Provided password:', password);
-      console.log('Stored hashed password:', client.props.password);
+      console.log('Stored hashed password:', client);
 
       // else {
       //   return res.status(200).json({ success: true, message: 'Login successful.' });
