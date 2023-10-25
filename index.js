@@ -1,6 +1,9 @@
 const express = require('express')
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto'); 
+
 const saltRounds = 10;
 const bodyParser = require('body-parser');
 
@@ -77,11 +80,11 @@ app.delete('collection/:colName', async (req, res) => { // deleting a collection
   res.json(newCollection).end()
 })
 
-app.post('/clients/new', async (req, res) => {
+app.post('/clients/new', async (req, res) => { // Sign up
   const { email, password } = req.body;
 
   try {
-    // Check if the user exists
+    // Checking if the user exists
     const client = await db.collection('doceaseclients').get(email);
 
     // If the user exists, return a message
@@ -90,13 +93,13 @@ app.post('/clients/new', async (req, res) => {
       return;
     }
 
-    // Hash the password before storing
+    // Hashing the password before storing
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Replace the plain password with the hashed version
     req.body.password = hashedPassword;
 
-    // Store the user in the database
+    // Storing the user in the database
     const result = await db.collection('doceaseclients').set(email, req.body);
     console.log(JSON.stringify(result, null, 2));
     res.json({ success: true, message: 'User added successfully.', data: { added: true } });
@@ -107,7 +110,7 @@ app.post('/clients/new', async (req, res) => {
   }
 });
 
-app.post('/users/login', async (req, res) => {
+app.post('/users/login', async (req, res) => { // Login
   const { email, password } = req.body;
 
   try {
@@ -130,4 +133,63 @@ app.post('/users/login', async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal server error.' });
   }
+});
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+      user: '@gmail.com', //gmail address
+      pass: '' // gmail password
+  }
+});
+
+const sendPasswordResetEmail = async (email, token) => {
+  try {
+      const resetLink = `https://yourfrontendapp.com/reset-password?token=${token}`; // to change when sent link to frontend
+
+      const mailOptions = {
+          from: 'YOUR_GMAIL_ADDRESS@gmail.com',
+          to: email,
+          subject: 'Password Reset Request',
+          html: `
+              <p>You requested a password reset. Click the link below to reset your password:</p>
+              <a href="${resetLink}">${resetLink}</a>
+              <p>If you did not request this, please ignore this email.</p>
+          `
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('Password reset email sent:', info.response);
+  } catch (error) {
+      console.error('Error sending password reset email:', error);
+  }
+};
+
+app.post('/users/request-password-reset', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Checking if email exists in the database
+        const user = await db.collection('doceaseclients').get(email);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Email not found.' });
+        }
+
+        // for generating a unique token for this password reset request
+        const token = crypto.randomBytes(20).toString('hex');
+
+        // Storing the token in the database with an expiration time
+        await db.collection('passwordResetTokens').set(email, {
+            token,
+            expires: new Date(Date.now() + 3600000) // 1 hour from now
+        });
+
+        // Sending an email to the user with the reset link
+        await sendPasswordResetEmail(email, token);
+
+        res.json({ success: true, message: 'Password reset email sent.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
 });
