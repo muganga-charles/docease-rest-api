@@ -65,6 +65,7 @@ app.post("/clients/new", async (req, res) => {
       return;
     }
 
+    const saltRounds = 12
     // Hash the password before storing
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
