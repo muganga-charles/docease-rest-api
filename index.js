@@ -90,6 +90,43 @@ app.post("/clients/new", async (req, res) => {
   }
 });
 
+// Get hospitals/health facilities within given radius using googlemaps
+app.get("/near-by-places", async (req, res) => {
+  const latitude = req.query.latitude;
+  const longitude = req.query.longitude;
+
+  try {
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide location co-ordinates",
+      });
+    }
+    const healthFacilities = await client.placesNearby({
+      params: {
+        location: `${latitude}, ${longitude}`,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+        radius: 1000,
+        types: ["hospital", "health"],
+      },
+    });
+    if (healthFacilities.statusText !== "OK") {
+      return res
+        .status(400)
+        .json({ success: false, message: "could not find places" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "get health successfully",
+      data: healthFacilities.data,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
 app.get("/:col/:key", async (req, res) => {
   // getting a key from a collection
   const col = req.params.col;
@@ -233,39 +270,3 @@ app.post("/users/verify", async (req, res) => {
   }
 });
 
-// Get hospitals/health facilities within given radius using googlemaps
-app.get("/near-by-places", async (req, res) => {
-  const latitude = req.query.latitude;
-  const longitude = req.query.longitude;
-
-  try {
-    if (!latitude || !longitude) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide location co-ordinates",
-      });
-    }
-    const healthFacilities = await client.placesNearby({
-      params: {
-        location: `${latitude}, ${longitude}`,
-        key: process.env.GOOGLE_MAPS_API_KEY,
-        radius: 1000,
-        types: ["hospital", "health"],
-      },
-    });
-    if (healthFacilities.statusText !== "OK") {
-      return res
-        .status(400)
-        .json({ success: false, message: "could not find places" });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "get health successfully",
-      data: healthFacilities.data,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Internal server error." });
-  }
-});
