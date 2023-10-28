@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const { Client } = require("@googlemaps/google-maps-services-js");
 
-
 dotenv.config();
 const client = new Client({});
 const app = express();
