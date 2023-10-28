@@ -17,6 +17,7 @@
   "dependencies": {
     "@cyclic.sh/dynamodb": "^0.0.33",
     "@faker-js/faker": "^8.2.0",
+    "@googlemaps/google-maps-services-js": "^3.3.41",
     "aws-sdk": "^2.1473.0",
     "axios": "^1.5.1",
     "bcrypt": "^5.1.1",
