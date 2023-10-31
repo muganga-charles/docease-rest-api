@@ -163,8 +163,7 @@ app.post("/users/forgot-password", async (req, res) => {
     const result = await db.collection("doceaseclients").set(email, params); //To confirm
 
     // const resetURL = `${req.protocol}://localhost:5173/reset-password/${resetToken}`;
-    const resetURL = `${req.protocol}://docease.netlify.app/reset-password/${resetToken}`;
-    const subject = "Reset Password";
+    const resetURL = `${req.protocol}://docease.netlify.app/reset-password/${email}/${resetToken}`;    const subject = "Reset Password";
 
     console.log("resetURL");
     console.log(resetURL);
@@ -183,23 +182,38 @@ app.post("/users/forgot-password", async (req, res) => {
   }
 });
 
-app.post("/users/reset-password/:token", async (req, res) => {
+app.post("/users/reset-password/:key/:token", async (req, res) => {
   try {
+    const key = req.params.key;
     const token = req.params.token;
+
+    if (!key)
+      return res.status(400).json({
+        success: false,
+        message: "Please provide the password reset key",
+      });
 
     if (!token)
       return res.status(400).json({
         success: false,
         message: "Please provide the reset token",
       });
-    const hashedToken = createHash("sha256").update(token).digest("hex");
 
-    const user = await db.collection("doceaseclients").get(hashedToken);
+    const user = await db.collection("doceaseclients").get(key);
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Password reset token is invalid",
+        message: "We could'nt that matches provided key",
+      });
+    }
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const savedToken = user.props?.passwordResetToken;
+
+    if (hashedToken !== savedToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Token provided is invalid",
       });
     }
 
