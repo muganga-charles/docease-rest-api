@@ -251,8 +251,7 @@ app.post("/users/reset-password/:key/:token", async (req, res) => {
       .json({ success: true, message: "password reset successful" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Internal server error." });
-  }
+    res.status(500).json({ success: true, message: "Internal server error." });  }
 });
 
 app.get("/:col/:key", async (req, res) => {
