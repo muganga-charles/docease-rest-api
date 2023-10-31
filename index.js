@@ -183,7 +183,7 @@ app.post("/users/forgot-password", async (req, res) => {
   }
 });
 
-app.post("users/reset-password/:token", async (req, res) => {
+app.post("/users/reset-password/:token", async (req, res) => {
   try {
     const token = req.params.token;
 
