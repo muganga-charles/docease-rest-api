@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const { Client } = require("@googlemaps/google-maps-services-js");
+const { createHash, randomBytes } = require("crypto");
+const { Email } = require("./email/email");
 
 dotenv.config();
 const client = new Client({});
@@ -121,6 +123,118 @@ app.get("/near-by-places", async (req, res) => {
       message: "get health successfully",
       data: healthFacilities.data,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
+app.post("/users/forgot-password", async (req, res) => {
+  try {
+    const email = req.body.email;
+
+    if (!email) {
+      return res
+        .status(200)
+        .json({ success: false, message: "Please provide email" });
+    }
+    const user = await db.collection("doceaseclients").get(email);
+
+    if (!user) {
+      return res.status(200).json({
+        success: false,
+        message: "There is no user with supplied email",
+      });
+    }
+    const resetToken = randomBytes(32).toString("hex");
+
+    const passwordResetToken = createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    const passwordResetExpires = new Date(
+      Date.now() + 20 * 60 * 1000
+    ).toISOString();
+
+    const params = {
+      passwordResetToken: passwordResetToken,
+      passwordResetExpires: passwordResetExpires,
+    };
+    // save passwordResetToken and passwordResetExpires in database
+    const result = await db.collection("doceaseclients").set(email, params); //To confirm
+
+    // const resetURL = `${req.protocol}://localhost:5173/reset-password/${resetToken}`;
+    const resetURL = `${req.protocol}://docease.netlify.app/reset-password/${resetToken}`;
+    const subject = "Reset Password";
+
+    console.log("resetURL");
+    console.log(resetURL);
+
+    const fullName = user.props.fullName;
+
+    await new Email(email, subject).sendPasswordReset(resetURL, fullName);
+
+    res.status(200).json({
+      status: "success",
+      message: "Password reset token sent to mail",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
+app.post("users/reset-password/:token", async (req, res) => {
+  try {
+    const token = req.params.token;
+
+    if (!token)
+      return res.status(400).json({
+        success: false,
+        message: "Please provide the reset token",
+      });
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+
+    const user = await db.collection("doceaseclients").get(hashedToken);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Password reset token is invalid",
+      });
+    }
+
+    const passwordResetExpiry = new Date(user.props.passwordResetExpires);
+    const currentDate = new Date();
+
+    if (passwordResetExpiry < currentDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Token  has expired",
+      });
+    }
+    const newPassword = req.body.password;
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide password",
+      });
+    }
+
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    const params = {
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      password: hashedPassword,
+    };
+
+    const email = user.props.email;
+    await db.collection("doceaseclients").set(email, params); //To confirm
+
+    res
+      .status(200)
+      .json({ success: true, message: "password reset successful" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error." });
