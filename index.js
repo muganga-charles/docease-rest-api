@@ -81,6 +81,9 @@ app.post("/clients/new", async (req, res) => {
     // Store the user in the database
     const result = await db.collection("doceaseclients").set(email, req.body);
     console.log(JSON.stringify(result, null, 2));
+
+    await new Email(email, "Welcome").sendWelcome(req.body.fullName);
+
     res.json({
       success: true,
       message: "User added successfully.",
