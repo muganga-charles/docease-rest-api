@@ -1,8 +1,9 @@
 extends baseEmail
 
 block content
-  p Hi #{userName},
-  p  Welcome to Decease , we're glad to have you 🎉
+  p Hi #{fullName},
+  p  Welcome to Docease, your healthcare companion for easy access to nearby hospitals and health facilities. Our mission is to simplify your healthcare experience.
+  p  To start, click the button below to log in and explore:
   table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
     tbody
     
@@ -12,6 +13,6 @@ block content
             tbody
               tr
                 td
-                  a(href=`https://dav-safaris.com/login`, target='_blank') Get Started
-  p If you need any help with getting your account  setup, please don't hesitate to contact us!
-  p  support@davsafaris.com
+                  a(href=`https://docease.netlify.app/login`, target='_blank') Get Started
+  p  We're here to support your health journey. Contact our customer support for assistance. 
+  p  docease.app@gmail.com

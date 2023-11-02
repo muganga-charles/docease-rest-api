@@ -9,6 +9,7 @@ class Email {
   constructor(recipients, subject) {
     SGmail.setApiKey(process.env.SEND_GRID_API_KEY);
 
+    // this.from = "drimmiadolphoisdreyfus@gmail.com";
     this.from = "docease.app@gmail.com";
     this.recipients = recipients;
     this.subject = subject;
@@ -30,12 +31,15 @@ class Email {
     }
   }
 
-  async sendWelcome(username) {
+  async sendWelcome(name) {
     const html = pug.renderFile(path.join(__dirname, "/views/welcome.pug"), {
       subject: this.subject,
-      userName: username,
+      fullName: name,
     });
-    await this.sendHtml(html, "Welcome to Docease ");
+    await this.sendHtml(
+      html,
+      "Welcome to Docease - Your Guide to Nearby Hospitals and Health Facilities!"
+    );
   }
 
   async sendPasswordReset(url, username) {
