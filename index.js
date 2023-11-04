@@ -118,7 +118,7 @@ app.get("/near-by-places", async (req, res) => {
         message: "Please provide location co-ordinates",
       });
     }
-
+    // disease to be used to restrict the response
     if (restrictedDiseases.includes(disease.toLowerCase())) {
       return res.status(200).json({
         success: true,
@@ -126,7 +126,7 @@ app.get("/near-by-places", async (req, res) => {
         data: [] // No data since we are restricting the response for certain diseases
       });
     }
-    
+
     const healthFacilities = await client.placesNearby({
       params: {
         location: `${latitude}, ${longitude}`,
