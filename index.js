@@ -22,6 +22,14 @@ const signAccessToken = (key) => {
   });
 };
 
+// shuflfling the array
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+  }
+}
+
 const corsOptions = {
   origin: "*",
   optionsSuccessStatus: 200,
@@ -121,6 +129,9 @@ app.get("/near-by-places", async (req, res) => {
         .json({ success: false, message: "could not find places" });
     }
 
+      // shuffle the array
+      shuffleArray(healthFacilities.data.results);
+      
     res.status(200).json({
       success: true,
       message: "get health successfully",
