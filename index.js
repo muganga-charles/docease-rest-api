@@ -31,7 +31,7 @@ function shuffleArray(array) {
 }
 
 // restricting some diseases
-const restrictedDiseases = ['common cold', 'flu', 'allergy'];
+// const restrictedDiseases = ['common cold', 'flu', 'allergy'];
 
 const corsOptions = {
   origin: "*",
@@ -118,14 +118,14 @@ app.get("/near-by-places", async (req, res) => {
         message: "Please provide location co-ordinates",
       });
     }
-    // disease to be used to restrict the response
-    if (restrictedDiseases.includes(disease.toLowerCase())) {
-      return res.status(200).json({
-        success: true,
-        message: `No places shown for the entered disease: ${disease}`,
-        data: [] // No data since we are restricting the response for certain diseases
-      });
-    }
+    // // disease to be used to restrict the response
+    // if (restrictedDiseases.includes(disease.toLowerCase())) {
+    //   return res.status(200).json({
+    //     success: true,
+    //     message: `No places shown for the entered disease: ${disease}`,
+    //     data: [] // No data since we are restricting the response for certain diseases
+    //   });
+    // }
 
     const healthFacilities = await client.placesNearby({
       params: {
