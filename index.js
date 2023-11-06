@@ -127,11 +127,11 @@ app.get("/near-by-places", async (req, res) => {
     //     data: [] // No data since we are restricting the response for certain diseases
     //   });
     // }
-    if (!disease) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Please provide a disease" });
-    }
+    // if (!disease) {
+    //   return res
+    //     .status(400)
+    //     .json({ success: false, message: "Please provide adisease" });
+    // }
     const healthFacilities = await client.placesNearby({
       params: {
         location: `${latitude}, ${longitude}`,
