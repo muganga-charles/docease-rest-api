@@ -108,9 +108,10 @@ app.post("/clients/new", async (req, res) => {
 
 // Get hospitals/health facilities within given radius using googlemaps
 app.get("/near-by-places", async (req, res) => {
+  // console.log("req.query", req.query);
   const latitude = req.query.latitude;
   const longitude = req.query.longitude;
-
+  const disease = req.query.disease;
   try {
     if (!latitude || !longitude) {
       return res.status(400).json({
@@ -126,7 +127,11 @@ app.get("/near-by-places", async (req, res) => {
     //     data: [] // No data since we are restricting the response for certain diseases
     //   });
     // }
-
+    if (!disease) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide a disease" });
+    }
     const healthFacilities = await client.placesNearby({
       params: {
         location: `${latitude}, ${longitude}`,
@@ -279,6 +284,105 @@ app.post("/users/reset-password/:key/:token", async (req, res) => {
     console.error(error);
     res.status(500).json({ success: true, message: "Internal server error." });  }
 });
+
+// update profile
+app.patch("/users/update-profile", authorize, async (req, res) => {
+  const key = res.locals.key;
+
+  const fullName = req.body.fullName;
+  const email = req.body.email;
+  if (!fullName || !email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please fill out all fields" });
+  }
+  let user = await db.collection("doceaseclients").get(key);
+
+  if (user.props.email !== email) {
+    user = await db.collection("doceaseclients").get(email);
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: "Can't update to already registered email",
+      });
+    }
+  }
+
+  const params = {
+    email: email,
+    fullName: fullName,
+  };
+
+  await db.collection("doceaseclients").set(key, params);
+
+  res.status(200).json({
+    status: "success",
+    user,
+  });
+});
+
+// change password
+app.patch("/users/update-password", authorize, async (req, res) => {
+  const key = res.locals.key;
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+
+  const user = await db.collection("doceaseclients").get(key);
+
+  if (!(await bcrypt.compare(currentPassword, user.props.password))) {
+    return res.status(403).json({
+      success: false,
+      message: "Wrong current password",
+    });
+  }
+  if (await bcrypt.compare(newPassword, user.props.password)) {
+    return res.status(403).json({
+      success: false,
+      message: "New password same as current password",
+    });
+  }
+
+  const saltRounds = 12;
+  const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+  const params = {
+    password: hashedPassword,
+  };
+
+  await db.collection("doceaseclients").set(key, params);
+
+  res
+    .status(200)
+    .json({ success: true, message: "Password changed successfully" });
+});
+
+async function authorize(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  let token;
+  if (authHeader && authHeader.startsWith("Bearer")) {
+    token = authHeader.split(" ")[1];
+  }
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "You are not logged! Please to get access",
+    });
+  }
+  const jwtSecret = "wzPe7g19Yan27T2ATud1Kw==";
+
+  const decoded = jwt.verify(token, jwtSecret);
+
+  const user = await db.collection("doceaseclients").get(decoded.key);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "The user belonging to this token no exists!",
+    });
+  }
+
+  res.locals.key = decoded.key;
+  next();
+}
 
 app.get("/:col/:key", async (req, res) => {
   // getting a key from a collection
