@@ -7,7 +7,6 @@ const dotenv = require("dotenv");
 const { Client } = require("@googlemaps/google-maps-services-js");
 const { createHash, randomBytes } = require("crypto");
 const { Email } = require("./email/email");
-const { Upload, uploadFile } = require("./uploadFile");
 
 dotenv.config();
 const client = new Client({});
@@ -354,113 +353,6 @@ app.patch("/users/update-password", authorize, async (req, res) => {
   res
     .status(200)
     .json({ success: true, message: "Password changed successfully" });
-});
-
-app.post("/users/profile-picture", authorize, uploadFile, async (req, res) => {
-  try {
-    const file = req.file;
-    const key = res.locals.key;
-
-    if (file == undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide your profile picture !",
-      });
-    }
-
-    const mimeType = mime.lookup(file.originalname);
-    const isImage = mimeType && mimeType.startsWith("image");
-    if (!isImage) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide file of image type !",
-      });
-    }
-
-    const imagePath = `users/${Date.now()}_${file.originalname}`;
-    const upload = await new Upload(imagePath).add(file);
-    const url = upload?.url;
-
-    const params = {
-      imageUrl: url,
-      imagePath: imagePath,
-    };
-
-    await db.collection("doceaseclients").set(key, params);
-
-    const user = await db.collection("doceaseclients").get(key);
-
-    user.props.password = undefined;
-    user.props.passwordResetToken = undefined;
-    user.props.passwordResetExpires = undefined;
-    user.props.imagePath = undefined;
-    user.props.imageUrl = url;
-
-    res.status(200).json({
-      status: "success",
-      message: `Photo uploaded successfully`,
-      data: {
-        user: user.props,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.patch("/users/profile-picture", authorize, uploadFile, async (req, res) => {
-  try {
-    const file = req.file;
-    const key = res.locals.key;
-    if (file == undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide your profile picture !",
-      });
-    }
-
-    const mimeType = mime.lookup(file.originalname);
-    const isImage = mimeType && mimeType.startsWith("image");
-    if (!isImage) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide file of image type !",
-      });
-    }
-
-    const user = await db.collection("doceaseclients").get(key);
-
-    const savedImagePath = user.props.imagePath;
-
-    const imagePath = `users/${Date.now()}_${file.originalname}`;
-    const upload = await new Upload(imagePath).update(file, savedImagePath);
-    const url = upload?.url;
-
-    const params = {
-      imageUrl: url,
-      imagePath: imagePath,
-    };
-
-    await db.collection("doceaseclients").set(key, params);
-
-    user.props.password = undefined;
-    user.props.passwordResetToken = undefined;
-    user.props.passwordResetExpires = undefined;
-    user.props.imagePath = undefined;
-    user.props.imageUrl = url;
-
-    res.status(200).json({
-      status: "success",
-      message: `Photo uploaded successfully`,
-      data: {
-        user: user.props,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
-  }
 });
 
 async function authorize(req, res, next) {
