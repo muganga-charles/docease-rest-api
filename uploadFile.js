@@ -87,7 +87,6 @@ class Upload {
       if (err) throw new Error("Sorry, error occurred while uploading!");
     }
   }
-
   async delete() {
     try {
       const reference = ref(this.firebaseStorage, this.path(this.filePath));
