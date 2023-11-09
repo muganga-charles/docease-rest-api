@@ -7,6 +7,7 @@ const dotenv = require("dotenv");
 const { Client } = require("@googlemaps/google-maps-services-js");
 const { createHash, randomBytes } = require("crypto");
 const { Email } = require("./email/email");
+const { Upload, uploadFile } = require("./uploadFile");
 
 dotenv.config();
 const client = new Client({});
@@ -91,7 +92,7 @@ app.post("/clients/new", async (req, res) => {
 
     // Store the user in the database
     const result = await db.collection("doceaseclients").set(email, req.body);
-    console.log(JSON.stringify(result, null, 2));
+    // console.log(JSON.stringify(result, null, 2));
 
     await new Email(email, "Welcome").sendWelcome(req.body.fullName);
 
@@ -155,7 +156,7 @@ app.get("/near-by-places", async (req, res) => {
       data: healthFacilities.data,
     });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
@@ -196,8 +197,8 @@ app.post("/users/forgot-password", async (req, res) => {
     // const resetURL = `${req.protocol}://localhost:5173/reset-password/${resetToken}`;
     const resetURL = `${req.protocol}://docease.netlify.app/reset-password/${email}/${resetToken}`;    const subject = "Reset Password";
 
-    console.log("resetURL");
-    console.log(resetURL);
+    // console.log("resetURL");
+    // console.log(resetURL);
 
     const fullName = user.props.fullName;
 
@@ -355,6 +356,113 @@ app.patch("/users/update-password", authorize, async (req, res) => {
     .json({ success: true, message: "Password changed successfully" });
 });
 
+app.post("/users/profile-picture", authorize, uploadFile, async (req, res) => {
+  try {
+    const file = req.file;
+    const key = res.locals.key;
+
+    if (file == undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide your profile picture !",
+      });
+    }
+
+    const mimeType = mime.lookup(file.originalname);
+    const isImage = mimeType && mimeType.startsWith("image");
+    if (!isImage) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide file of image type !",
+      });
+    }
+
+    const imagePath = `users/${Date.now()}_${file.originalname}`;
+    const upload = await new Upload(imagePath).add(file);
+    const url = upload?.url;
+
+    const params = {
+      imageUrl: url,
+      imagePath: imagePath,
+    };
+
+    await db.collection("doceaseclients").set(key, params);
+
+    const user = await db.collection("doceaseclients").get(key);
+
+    user.props.password = undefined;
+    user.props.passwordResetToken = undefined;
+    user.props.passwordResetExpires = undefined;
+    user.props.imagePath = undefined;
+    user.props.imageUrl = url;
+
+    res.status(200).json({
+      status: "success",
+      message: `Photo uploaded successfully`,
+      data: {
+        user: user.props,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.patch("/users/profile-picture", authorize, uploadFile, async (req, res) => {
+  try {
+    const file = req.file;
+    const key = res.locals.key;
+    if (file == undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide your profile picture !",
+      });
+    }
+
+    const mimeType = mime.lookup(file.originalname);
+    const isImage = mimeType && mimeType.startsWith("image");
+    if (!isImage) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide file of image type !",
+      });
+    }
+
+    const user = await db.collection("doceaseclients").get(key);
+
+    const savedImagePath = user.props.imagePath;
+
+    const imagePath = `users/${Date.now()}_${file.originalname}`;
+    const upload = await new Upload(imagePath).update(file, savedImagePath);
+    const url = upload?.url;
+
+    const params = {
+      imageUrl: url,
+      imagePath: imagePath,
+    };
+
+    await db.collection("doceaseclients").set(key, params);
+
+    user.props.password = undefined;
+    user.props.passwordResetToken = undefined;
+    user.props.passwordResetExpires = undefined;
+    user.props.imagePath = undefined;
+    user.props.imageUrl = url;
+
+    res.status(200).json({
+      status: "success",
+      message: `Photo uploaded successfully`,
+      data: {
+        user: user.props,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 async function authorize(req, res, next) {
   const authHeader = req.headers["authorization"];
   let token;
@@ -388,24 +496,24 @@ app.get("/:col/:key", async (req, res) => {
   // getting a key from a collection
   const col = req.params.col;
   const key = req.params.key;
-  console.log(
-    `from collection: ${col} get key: ${key} with params ${JSON.stringify(
-      req.params
-    )}`
-  );
+  // console.log(
+  //   `from collection: ${col} get key: ${key} with params ${JSON.stringify(
+  //     req.params
+  //   )}`
+  // );
   const item = await db.collection(col).get(key);
-  console.log(JSON.stringify(item, null, 2));
+  // console.log(JSON.stringify(item, null, 2));
   res.json(item).end();
 });
 
 app.get("/:col", async (req, res) => {
   // listing a collection
   const col = req.params.col;
-  console.log(
-    `list collection: ${col} with params: ${JSON.stringify(req.params)}`
-  );
+  // console.log(
+  //   `list collection: ${col} with params: ${JSON.stringify(req.params)}`
+  // );
   const items = await db.collection(col).list();
-  console.log(JSON.stringify(items, null, 2));
+  // console.log(JSON.stringify(items, null, 2));
   res.json(items).end();
 });
 
@@ -422,7 +530,7 @@ app.delete("collection/:colName", async (req, res) => {
   const { colName } = req.params;
   // try{}
   await db.delete(colName);
-  console.log(JSON.stringify(newCollection, null, 2));
+  // console.log(JSON.stringify(newCollection, null, 2));
   res.json(newCollection).end();
 });
 
